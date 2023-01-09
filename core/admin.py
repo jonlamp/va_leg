@@ -3,3 +3,4 @@ from .models import Legislator, Session
 
 # Register your models here.
 admin.site.register(Session)
+admin.site.register(Legislator)

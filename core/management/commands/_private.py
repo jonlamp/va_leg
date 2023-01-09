@@ -16,7 +16,7 @@ import codecs
 from bs4 import BeautifulSoup as bs
 import re
 from core.models import Legislator, Session
-
+import time
 #after this session, I'll need a better way to get the current session
 CONFIG = {
     'session':'231'
@@ -33,19 +33,29 @@ def get_csv_dicts(session:str,filename:str)->list:
     """
     url = f'https://lis.virginia.gov/SiteInformation/csv/{session}/{filename}.csv'
     response = requests.get(url)
-    if response.status_code != 200:
-        print(f'Failed to collect file. Error code:{response.status_code}')
-        return None
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        raise SystemExit(err)
     else:
         #apparently uses iso encoding
         decoded_response = codecs.iterdecode(response.iter_lines(),'iso-8859-1') 
         reader = csv.DictReader(decoded_response)
-        return list(reader)
+        l_reader = list(reader)
+        for row in l_reader:
+            for k,v in row.items():
+                #each field sometimes has trailing spaces
+                row[k] = v.strip()
+        return l_reader
+
 
 #legislators should be updated first, as many other records are related
-def update_legislators(session:str)->int:
+def update_legislators(session:str)->dict:
     """
-    Checks db for legislator, adds if not found. Returns number of new legislators.
+    Checks db for legislator, adds if not found. Returns dict with:
+        -New legislators
+        -list of csv legislators
     """
     def scrape_lis_legislator(session:str,lis_id:str)->dict:
         """
@@ -53,26 +63,33 @@ def update_legislators(session:str)->int:
         the CSVs that DLAS provides do not provide certain desired information.
         """
         url = f"https://lis.virginia.gov/cgi-bin/legp604.exe?{session}+mbr+{lis_id}"
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f'Failed to find legislator. Error code: {response.status_code}')
-            return None
+        class ScrapingError(Exception):
+            pass
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise SystemExit(err)
         else:
-            soup = bs(response.text)
+            soup = bs(response.text,features='lxml')
             main = soup.find(id="mainC")
-            font = main.font.contents[0]
-            return {
-                'session':session,
-                'party':re.findall(".(?=\))",font)[0],
-                'district':re.findall("\d+", font)[0]
-            }
+            if main is None:
+                raise ScrapingError(response.text)
+            else:
+                font = main.font.contents[0]
+                return {
+                    'session':session,
+                    'party':re.findall(".(?=\))",font)[0],
+                    'district':re.findall("\d+", font)[0]
+                }
 
     csv_legislators = get_csv_dicts(session,'members')
     existing_legislators = Legislator.objects.values()
     new_legislators = 0
     for rep in csv_legislators:
         matching_reps = [x for x in existing_legislators if x['lis_id']==rep['MBR_MBRID']]
-        if len(matching_reps)==0:
+        if len(existing_legislators) == 0 or len(matching_reps)==0:
+            time.sleep(1) #ideally keeps LIS from locking us out
             rep_details = scrape_lis_legislator(session,rep['MBR_MBRID'])
             rep.update(rep_details)
             record = Legislator(
@@ -85,6 +102,11 @@ def update_legislators(session:str)->int:
             record.save()
             new_legislators += 1
 
-    return new_legislators
+
+    return {
+        'new_legislators':new_legislators,
+        'csv_legislators':csv_legislators,
+        'existing_legislators':existing_legislators
+    }
 
 #bills = get_csv_dicts(CONFIG['session'],'bills')
