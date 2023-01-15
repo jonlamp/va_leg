@@ -52,15 +52,7 @@ def get_csv_dicts(session:str,filename:str)->list:
                 row[k] = v.strip()
         return l_reader
 
-
-#legislators should be updated first, as many other records are related
-def update_legislators(session:str)->dict:
-    """
-    Checks db for legislator, adds if not found. Returns dict with:
-        -New legislators
-        -list of csv legislators
-    """
-    def scrape_lis_legislator(session:str,lis_id:str)->dict:
+def scrape_lis_legislator(session:str,lis_id:str)->dict:
         """
         Returns dictionary of legislator information from LIS page - as 
         the CSVs that DLAS provides do not provide certain desired information.
@@ -86,14 +78,19 @@ def update_legislators(session:str)->dict:
                     'district':re.findall("\d+", font)[0]
                 }
 
+#legislators should be updated first, as many other records are related
+def update_legislators(session:str)->dict:
+    """
+    Checks db for legislator, adds if not found. Returns dict with:
+        -New legislators
+        -list of csv legislators
+    """
+
     csv_legislators = get_csv_dicts(session,'members')
-    #existing_legislators = Legislator.objects.values()
     new_legislators = 0
     pbar = tqdm(total=len(csv_legislators))
     pbar.set_description("Importing legislators...")
     for rep in csv_legislators:
-        #matching_reps = [x for x in existing_legislators if x['lis_id']==rep['MBR_MBRID']]
-        #if len(existing_legislators) == 0 or len(matching_reps)==0:
         pbar.update(1)
 
         if not Legislator.objects.filter(lis_id=rep['MBR_MBRID']).exists():
@@ -132,6 +129,41 @@ def update_bills(session:str)->dict:
         pbar.set_description("Importing bills...")
         for bill in csv_bills:
             if not existing_bills.filter(bill_number = bill['Bill_id']).exists():
+                #legislators are sometimes deleted. Need to add info from 
+                #previous session(s) if so. #check a maximum of 5 sessions
+                if not Legislator.objects.filter(lis_id=bill['Patron_id']).exists():
+                    patron_id = bill['Patron_id']
+                    lis_no = patron_id[0] + int(patron_id[1:].zfill(4))
+                    print(
+                        f"""
+                        Cannot find legislator {patron_id}, {bill['Patron_name']}
+                        """
+                    )
+                    for i in range(1,6):
+                        session_base = int(session[:2])
+                        searching = str(session_base - (i))+"1"
+                        print(f"Searching session {searching}")
+                        try:
+                            lis_output = scrape_lis_legislator(
+                                session=searching,
+                                lis_id = patron_id
+                            )
+                            new_rep = Legislator(
+                                name = bill['Patron_name'],
+                                party = lis_output['session'],
+                                district = lis_output['district'],
+                                lis_id = patron_id,
+                                lis_no = lis_no
+                            )
+                            new_rep.save()
+                            patron = new_rep
+                            break
+                        except:
+                            if i >= 5:
+                                print("Could not find legislator in previous 5 sessions.")
+                                raise
+                            else:
+                                pass
                 patron = Legislator.objects.get(lis_id=bill['Patron_id'])
                 sesh = Session.objects.get(lis_id=session)
                 d_introduced = dt.datetime.strptime(bill['Introduction_date'],"%m/%d/%y")
