@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>VAL - Virginia Legislation</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="stylesheet" href="https://use.typekit.net/dpe5kej.css">
+        <link rel="stylesheet" href="{% static 'core/style.css' %}">
+        <style>
+            h1 {
+                text-transform: uppercase;
+                color: #FCA311;
+                margin: 10px 0px 40px 0px;
+            }
+            #hero {
+                display: flex;
+                flex-direction: column;
+                flex:1 2 auto;
+                align-items: center;
+                justify-content: flex-end;
+            }
+            #anti-hero {
+                display: flex;
+                flex-direction: column;
+                flex: 3 1 auto;
+                align-items: center;
+                justify-content: flex-start;
+            }
+            #q {
+                font-size:18px;
+                width: 60vw;
+                padding: 5px 30px;
+                border-radius: 15px;
+                border: 1px solid grey;
+            }
+            #anti-hero div {
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="site-nav">
+            <a href="">Browse</a>
+            <a href="">About</a>
+            <a href="">Sign In</a>
+            <a href="">Register</a>
+        </div>
+        <div id="content">
+            <div id="hero">
+                <img src="{% static 'core/images/logo.png' %}">
+                <h1>Virginia Legislation</h1>
+            </div>
+            <div id="anti-hero">
+                <form id="search-form">
+                    <input name="q" type="text" id="q" placeholder="Search by bill, legislator, or keyword">
+                </form>
+                <div>
+                    Or use our <a href="">advanced search</a> to limit by session or other characteristics.
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %}
+
+{% block local_style %}
+<style>
+</style>
+{% endblock %}
+
+{% block left_nav %}
+<form id="search-form">
+    <input type="text" name="q" id="q" placeholder="Search"/>
+</form>
+<br/>
+<a href="">Advanced Search</a>
+<hr>
+{% endblock %}
+{% block content %} 
+    <h1 id="bill-number">{{ bill.bill_number }}</h1>
+    <div id="subtitle">{{ bill.title }}</div>
+    <p>{{ bill.summary }}</p>
+    <div id="patrons" class="collapsable">
+        <h2>Patrons</h2>
+    </div>
+    <div id="committees" class="collapsable">
+        <h2>Committees</h2>
+    </div>
+    <div id="updates" class="collapsable">
+        <h2>Updates</h2>
+    </div>
+{% endblock %}

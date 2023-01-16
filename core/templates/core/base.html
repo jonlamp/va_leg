@@ -1,0 +1,39 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{{ title }}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{% static 'core/style.css' %}">
+        {% block local_style %}
+        {% endblock %}
+    </head>
+    <body>
+        <div id="top-nav">
+            <a href="{% url 'index' %}">
+                <div id="site-title">
+                    <img src="{% static 'core/images/logo.png' %}">
+                    VAL
+                </div>
+            </a>
+            <div id="site-nav">
+                <a href="">Browse</a>
+                <a href="">About</a>
+                <a href="">Sign In</a>
+                <a href="">Register</a>
+            </div>
+        </div>
+        <main>
+            <div id="left-nav">
+                {% block left_nav %}
+                {% endblock %}
+            </div>
+            <div id="content">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
+    </body>
+</html>

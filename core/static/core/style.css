@@ -1,0 +1,84 @@
+body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: #FDFCFA;
+    font-family: neue-haas-grotesk-text, sans-serif;
+    font-style: normal;
+    font-weight: 300;
+    color: #333533;
+    padding: 0px;
+    margin: 0px;
+    height:100vh;
+}
+a {
+    color: #333533;
+}
+h1 {
+    font-family: azo-sans-web,sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size:52px;
+}
+#top-nav{
+    background-color: #333533;
+    display: flex;
+    align-items: center;
+    padding: 5px 30px;
+}
+#top-nav a {
+    color:#FDFCFA;
+    text-decoration: none;
+}
+#site-title img {
+    max-height: 40px;
+}
+#top-nav #site-title {
+    flex: 1 2 auto;
+    color: #fca311;
+    display: flex;
+    align-items: center;
+    font-family: azo-sans-web,sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size:24px;
+}
+#site-nav {
+    display:flex;
+    justify-content: right;
+    padding: 20px;
+}
+#top-nav #site-nav {
+    flex: 1 3 auto;
+}
+#site-nav a {
+    margin-right: 10px;
+}
+main {
+    display: flex;
+    flex: 1;
+}
+#left-nav {
+    background-color: #E8EDDF;
+    flex: 0 3 200px;
+    padding: 30px 10px;
+}
+
+#left-nav #search {
+    margin-left: 40px;
+}
+#content {
+    display: flex;
+    flex-direction: column;
+    flex:2 1 auto;
+    padding: 10px 50px;
+}
+#subtitle {
+    font-family: azo-sans-web,sans-serif;
+    font-weight: 500;
+    font-size:28px;
+    text-transform: uppercase;
+}
+#bill-number {
+    margin-bottom: 10px;
+}
