@@ -20,6 +20,17 @@ h1 {
     font-style: italic;
     font-size:52px;
 }
+label[for="id_query"] {
+    position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0,0,0,0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
+}
 #top-nav{
     background-color: #333533;
     display: flex;
@@ -64,9 +75,6 @@ main {
     padding: 30px 10px;
 }
 
-#left-nav #search {
-    margin-left: 40px;
-}
 #content {
     display: flex;
     flex-direction: column;

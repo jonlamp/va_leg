@@ -1,0 +1,33 @@
+{% extends 'core/base.html' %}
+
+{% block local_style %}
+<style>
+</style>
+{% endblock %}
+
+{% block left_nav %}
+<form id="search-form" action="search">
+    {{ search_form }}
+</form>
+<br/>
+<a href="">Advanced Search</a>
+<hr>
+{% endblock %}
+{% block content %} 
+    <h1>Results</h1>
+    <div id="search-string">
+        {{ query_string }}
+    </div>
+    <div id="search-results">
+    {% for bill in results %} 
+        <div class="bill">
+            <div class="title">
+                <a href="{% url 'bill_view' bill.pk %}">
+                    <span class="bill-number">{{ bill.bill_number }}</span> - 
+                    {{ bill.title }}
+                </a>
+            </div>
+        </div>
+    {% endfor %}
+    </div>
+{% endblock %}

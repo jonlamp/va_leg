@@ -6,8 +6,8 @@
 {% endblock %}
 
 {% block left_nav %}
-<form id="search-form">
-    <input type="text" name="q" id="q" placeholder="Search"/>
+<form id="search-form" action="{% url 'search' %}">
+    {{ search_form }}
 </form>
 <br/>
 <a href="">Advanced Search</a>

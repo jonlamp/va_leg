@@ -28,12 +28,16 @@
                 align-items: center;
                 justify-content: flex-start;
             }
-            #q {
+            label[for="id_query"] {
+                display:none;
+            }
+            #id_query {
                 font-size:18px;
                 width: 60vw;
                 padding: 5px 30px;
                 border-radius: 15px;
                 border: 1px solid grey;
+                max-width: 800px;
             }
             #anti-hero div {
                 margin-top: 20px;
@@ -53,8 +57,8 @@
                 <h1>Virginia Legislation</h1>
             </div>
             <div id="anti-hero">
-                <form id="search-form">
-                    <input name="q" type="text" id="q" placeholder="Search by bill, legislator, or keyword">
+                <form id="search-form" action="{% url 'search' %}"> 
+                    {{ search_form }}
                 </form>
                 <div>
                     Or use our <a href="">advanced search</a> to limit by session or other characteristics.
