@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from core.models import Bill
+from core.models import Bill, BillSummaries
 from django import forms
-from django.db.models import Q, IntegerField
+from django.db.models import Q, IntegerField,Min
 from django.db.models.functions import Cast,Substr
 
 class BasicSearch(forms.Form):
@@ -21,10 +21,12 @@ def bill_view(request,bill_id):
     bill = Bill.objects.get(pk=bill_id)
     search_form = BasicSearch()
     search_form.fields['query'].widget.attrs['placeholder'] = 'Search'
+    summaries = BillSummaries.objects.filter(bill=bill)
     context = {
         'search_form':search_form,
         'title':bill.bill_number,
-        'bill':bill
+        'bill':bill,
+        'summaries':summaries
     }
     return render(request,'core/bill.html',context)
 
@@ -34,9 +36,12 @@ def search(request):
     q = request.GET['query']
     results = Bill.objects.filter(
         Q(bill_number__contains=q) |
-        Q(title__contains=q)
+        Q(title__contains=q) |
+        Q(summaries__content__contains=q)
+    ).annotate( 
+        min_year=Min('sessions__year')
     ).order_by(
-        'session__year',
+        'min_year',
         Substr('bill_number',1,2),
         Cast(Substr('bill_number',pos=3),IntegerField())
     )

@@ -32,15 +32,17 @@ class Bill(models.Model):
     emergency = models.BooleanField(default=False)
     passed = models.BooleanField(default=False)
     d_added = models.DateTimeField(auto_now_add=True)
-    patron = models.ForeignKey(
+    introduced_by = models.ForeignKey(
         Legislator,
         on_delete=models.PROTECT,
         related_name="introduced"
     )
-    session = models.ForeignKey(
-        Session,
-        on_delete=models.CASCADE,
-        related_name="bills"
+    sessions = models.ManyToManyField(
+        Session
+    )
+    patrons = models.ManyToManyField(
+        Legislator,
+        through='Patron'
     )
 
     def __str__(self)->str:
@@ -59,3 +61,28 @@ class BillSummaries(models.Model):
 
     def __str__(self)->str:
         return f"{self.bill.bill_number} - {self.category}"
+
+
+class Action(models.Model):
+    d_action = models.DateTimeField()
+    description = models.CharField(max_length=300)
+    refid = models.CharField(max_length=40,null=True)
+    bill = models.ForeignKey(
+        Bill,
+        on_delete=models.CASCADE,
+        related_name="actions"
+    )
+
+    def __str__(self) ->str:
+        return f"({self.bill.bill_number}) {self.d_action.strftime('mm/dd/yyyy')}: {self.description}"
+
+class Patron(models.Model):
+    patron_type = models.CharField(max_length=40)
+    bill = models.ForeignKey(
+        Bill,
+        on_delete=models.CASCADE,
+    )
+    legislator = models.ForeignKey(
+        Legislator,
+        on_delete=models.CASCADE,
+    )

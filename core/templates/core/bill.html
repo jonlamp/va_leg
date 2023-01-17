@@ -16,7 +16,28 @@
 {% block content %} 
     <h1 id="bill-number">{{ bill.bill_number }}</h1>
     <div id="subtitle">{{ bill.title }}</div>
-    <p>{{ bill.summary }}</p>
+    {% if summaries|length == 1 %}
+    <div id="summary">
+        <h2>Summary</h2>
+        <p>
+            {{ summaries.first.content }}
+        </p>
+    </div>
+    {% else %}
+    <h2>Summaries</h2>
+    <div id="summaries">
+        {% for summary in summaries %} 
+        <div class="collapsable">
+            <div class="collapse-head" data-target="sum{{ summary.pk }}">
+                {{ summary.category }}
+            </div>
+            <div class="collapse-content collapsed" id="sum{{ summary.pk }}">
+                {{ summary.content }}
+            </div>
+        </div>
+        {% endfor %} 
+    </div>
+    {% endif %} 
     <div id="patrons" class="collapsable">
         <h2>Patrons</h2>
     </div>

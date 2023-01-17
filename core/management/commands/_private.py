@@ -16,8 +16,9 @@ import codecs
 from bs4 import BeautifulSoup as bs
 import lxml.html
 import re
-from core.models import Legislator, Session, Bill
-import time
+from core.models import Legislator, Session, Bill, BillSummaries
+import time 
+from io import StringIO
 from tqdm import tqdm
 import datetime as dt
 #after this session, I'll need a better way to get the current session
@@ -43,9 +44,19 @@ def get_csv_dicts(session:str,filename:str)->list:
         raise SystemExit(err)
     else:
         #apparently uses iso encoding
-        decoded_response = codecs.iterdecode(response.iter_lines(),'iso-8859-1') 
-        reader = csv.DictReader(decoded_response)
-        l_reader = list(reader)
+        if filename == "Summaries":
+            #normally, one would use request.iter_lines here
+            #however, request.iter_lines drops newline characters without replacing
+            #meaningyougetsomewordslookinglikethis
+            file = StringIO(response.content.decode('utf-8'))
+            reader = csv.DictReader(file)
+            l_reader = list(reader)
+            file.close()
+        else:
+            decoded_response = codecs.iterdecode(response.iter_lines(),'iso-8859-1')
+            reader = csv.DictReader(decoded_response)
+            l_reader = list(reader)
+
         for row in l_reader:
             for k,v in row.items():
                 #each field sometimes has trailing spaces
@@ -82,7 +93,7 @@ def scrape_lis_legislator(session:str,lis_id:str)->dict:
 def update_legislators(session:str)->dict:
     """
     Checks db for legislator, adds if not found. Returns dict with:
-        -New legislators
+        -Count of new legislators
         -list of csv legislators
     """
 
@@ -109,7 +120,7 @@ def update_legislators(session:str)->dict:
     pbar.close()
 
     return {
-        'new_legislators':new_legislators,
+        'count':new_legislators,
         'csv_legislators':csv_legislators
     }
 
@@ -123,17 +134,32 @@ def update_bills(session:str)->dict:
     except:
         raise
     else:
-        existing_bills = Bill.objects.filter(session__lis_id=session)
+        sesh = Session.objects.get(lis_id=session)
         new_bills = 0
         pbar = tqdm(total = len(csv_bills))
         pbar.set_description("Importing bills...")
         for bill in csv_bills:
-            if not existing_bills.filter(bill_number = bill['Bill_id']).exists():
+            #check to make sure bill does not already exist or if it exists in 
+            #other sessions
+            d_introduced = dt.datetime.strptime(bill['Introduction_date'],"%m/%d/%y")
+            try:
+                matching_bill = Bill.objects.get(
+                    bill_number=bill['Bill_id'],
+                    d_introduced = d_introduced
+                )
+                matching_bill.sessions.add(sesh)
+            except Bill.MultipleObjectsReturned:
+                print(f"""Multiple bills match these parameters:
+                -Bill: {bill['Bill_id']}
+                -Introduced: {bill['Introduction_date']}
+                """)
+                raise
+            except Bill.DoesNotExist:
                 #legislators are sometimes deleted. Need to add info from 
                 #previous session(s) if so. #check a maximum of 5 sessions
                 if not Legislator.objects.filter(lis_id=bill['Patron_id']).exists():
                     patron_id = bill['Patron_id']
-                    lis_no = patron_id[0] + int(patron_id[1:].zfill(4))
+                    lis_no = patron_id[:1] + int(patron_id[2:].zfill(4))
                     print(
                         f"""
                         Cannot find legislator {patron_id}, {bill['Patron_name']}
@@ -165,36 +191,51 @@ def update_bills(session:str)->dict:
                             else:
                                 pass
                 patron = Legislator.objects.get(lis_id=bill['Patron_id'])
-                sesh = Session.objects.get(lis_id=session)
-                d_introduced = dt.datetime.strptime(bill['Introduction_date'],"%m/%d/%y")
                 record = Bill(
                     bill_number = bill['Bill_id'],
                     title = bill['Bill_description'],
                     d_introduced = d_introduced.strftime("%Y-%m-%d"),
                     emergency = bill['Emergency']=='Y',
                     passed = bill['Passed']=='Y',
-                    patron = patron,
-                    session = sesh
+                    introduced_by = patron,
                 )
                 record.save()
+                record.patrons.add(patron)
+                record.sessions.add(sesh)
                 new_bills += 1
+            except:
+                raise
             pbar.update(1)
         pbar.close()
         return {
-            "new_bills":new_bills
+            "count":new_bills
         }
 
 def update_summaries(session:str)->dict:
+    """
+    Collects summaries and updates of summaries from LIS and adds them to the database
+    """
     def clean_summary(summary:dict)->dict:
         """
         You give me a dictionary of a summary, I give you a dictionary of a summary.
+        Returns 
+        -bill_number
+        -doc_id
+        -category
+        -content
         """
+        #lis stores the bill number for summaries as HB0000, as opposed
+        #to HB0 where it is everywhere else
         bill = summary['SUM_BILNO'].strip()
-        bill = bill[0] + str(int(bill[1:]))
+        bill = bill[:2] + str(int(bill[2:]))
         doc_id = summary['SUMMARY_DOCID'].strip()
         category = summary['SUMMARY_TYPE'].strip()
         content_dirty = summary['SUMMARY_TEXT'].strip()
-        content_dirty = content_dirty.replace('\n','')
+        content_dirty = content_dirty.replace('\n',' ')
+        content_dirty = content_dirty.replace('  ',' ')
+        #the bolded part of the summary is just the title again
+        #so we'll remove the bold part
+        content_dirty = re.sub(r"(<b>.*</b>)"," ",content_dirty)
         html = lxml.html.document_fromstring(content_dirty)
         content = html.text_content()
         return {
@@ -203,3 +244,35 @@ def update_summaries(session:str)->dict:
             'category':category,
             'content':content
         }
+    try:
+        csv_summaries = get_csv_dicts(session,'Summaries')
+        csv_summaries = [clean_summary(x) for x in csv_summaries]
+    except:
+        raise
+    else:
+        new_summaries = 0
+        pbar = tqdm(total = len(csv_summaries))
+        pbar.set_description("Importing summaries...")
+        sesh = Session.objects.filter(lis_id = session)
+        db_summaries = BillSummaries.objects.filter(bill__sessions__in=sesh)
+        for row in csv_summaries:
+            if not db_summaries.filter(doc_id = row['doc_id']).exists():
+                try:
+                    bill = Bill.objects.get(bill_number = row['bill_number'])
+                except Bill.DoesNotExist:
+                    print(f"Cannot find bill {row['bill_number']}")
+                else:
+                    summary = BillSummaries(
+                        doc_id = row['doc_id'],
+                        category = row['category'],
+                        content=row['content'],
+                        bill = bill
+                    )
+                    summary.save()
+                    new_summaries +=1
+            pbar.update(1)
+        pbar.close()
+        return {
+            'count':new_summaries
+        }
+    

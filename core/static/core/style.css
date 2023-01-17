@@ -86,7 +86,37 @@ main {
     font-weight: 500;
     font-size:28px;
     text-transform: uppercase;
+    max-width: 1100px;
 }
 #bill-number {
     margin-bottom: 10px;
+}
+#search-string {
+    font-size:18pt;
+    margin-bottom:10px;
+}
+#summaries, #summary {
+    max-width: 900px;
+    line-height: 1.5;
+}
+#summaries .collapsable {
+    border: 1px solid #333533;
+}
+#summaries .collapse-head {
+    font-size: 18pt;
+    background-color: #E8EDDF;
+    padding: 10px 20px;
+}
+#summaries .collapse-content {
+    background-color: #FDFCFA;
+    padding: 10px 20px;
+    display:none;
+}
+footer {
+    background-color: #333533;
+    text-align: center;
+    padding: 10px;
+}
+footer, footer a{
+    color:#FDFCFA;
 }

@@ -2,6 +2,15 @@
 
 {% block local_style %}
 <style>
+    th{
+        text-align: left;
+    }
+    td, th{
+        padding: 5px 10px;
+    }
+    tr:nth-child(even){
+        background-color:#E8EDDF;
+    }
 </style>
 {% endblock %}
 
@@ -16,18 +25,26 @@
 {% block content %} 
     <h1>Results</h1>
     <div id="search-string">
-        {{ query_string }}
+        Returning results for: {{ query_string }}
     </div>
     <div id="search-results">
-    {% for bill in results %} 
-        <div class="bill">
-            <div class="title">
-                <a href="{% url 'bill_view' bill.pk %}">
-                    <span class="bill-number">{{ bill.bill_number }}</span> - 
-                    {{ bill.title }}
-                </a>
-            </div>
-        </div>
-    {% endfor %}
+        <table>
+            <thead>
+                <th>Bill</th>
+                <th>Title</th>
+            </thead>
+            <tbody>
+                {% for bill in results %}
+                <tr>
+                    <td>
+                        <a href="{% url 'bill_view' bill.pk %}">
+                            {{ bill.bill_number }}
+                        </a>
+                    </td>
+                    <td> {{ bill.title }} </td>
+                </tr> 
+                {% endfor %} 
+            </tbody>
+        </table>
     </div>
 {% endblock %}
