@@ -159,7 +159,7 @@ def update_bills(session:str)->dict:
                 #previous session(s) if so. #check a maximum of 5 sessions
                 if not Legislator.objects.filter(lis_id=bill['Patron_id']).exists():
                     patron_id = bill['Patron_id']
-                    lis_no = patron_id[:1] + int(patron_id[2:].zfill(4))
+                    lis_no = patron_id[:1] + str(int(patron_id[2:])).zfill(4)
                     print(
                         f"""
                         Cannot find legislator {patron_id}, {bill['Patron_name']}
