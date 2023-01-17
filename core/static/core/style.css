@@ -120,3 +120,11 @@ footer {
 footer, footer a{
     color:#FDFCFA;
 }
+@media screen and (max-width:900px) {
+    main{
+        flex-direction: column;
+    }
+    #left-nav{
+        flex:0 3;
+    }
+}

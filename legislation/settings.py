@@ -26,7 +26,8 @@ SECRET_KEY = SECRET
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "jonlamp.pythonanywhere.com"
+    "jonlamp.pythonanywhere.com",
+    "127.0.0.1"
 ]
 
 
