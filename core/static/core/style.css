@@ -31,6 +31,9 @@ label[for="id_query"] {
 	white-space: nowrap !important;
 	border: 0 !important;
 }
+.collapse-head:hover {
+    cursor: pointer;
+}
 #top-nav{
     background-color: #333533;
     display: flex;
@@ -80,6 +83,7 @@ main {
     flex-direction: column;
     flex:2 1 auto;
     padding: 10px 50px;
+    max-width: 900px;
 }
 #subtitle {
     font-family: azo-sans-web,sans-serif;
@@ -96,7 +100,6 @@ main {
     margin-bottom:10px;
 }
 #summaries, #summary {
-    max-width: 900px;
     line-height: 1.5;
 }
 #summaries .collapsable {
@@ -112,6 +115,17 @@ main {
     padding: 10px 20px;
     display:none;
 }
+#action-items .row {
+    display:flex;
+    padding: 5px;
+}
+#action-items .row .col {
+    flex: 0 3 auto;
+}
+#action-items .row .col:first-child {
+    flex: 0 0 100px;
+}
+
 footer {
     background-color: #333533;
     text-align: center;

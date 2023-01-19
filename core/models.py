@@ -67,12 +67,12 @@ class Action(models.Model):
     d_action = models.DateTimeField()
     description = models.CharField(max_length=300)
     refid = models.CharField(max_length=40,null=True)
+    d_added = models.DateTimeField(auto_now_add=True)
     bill = models.ForeignKey(
         Bill,
         on_delete=models.CASCADE,
         related_name="actions"
     )
-
     def __str__(self) ->str:
         return f"({self.bill.bill_number}) {self.d_action.strftime('mm/dd/yyyy')}: {self.description}"
 

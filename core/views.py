@@ -22,11 +22,13 @@ def bill_view(request,bill_id):
     search_form = BasicSearch()
     search_form.fields['query'].widget.attrs['placeholder'] = 'Search'
     summaries = BillSummaries.objects.filter(bill=bill)
+    actions = bill.actions.all()
     context = {
         'search_form':search_form,
         'title':bill.bill_number,
         'bill':bill,
-        'summaries':summaries
+        'summaries':summaries,
+        'actions':actions,
     }
     return render(request,'core/bill.html',context)
 

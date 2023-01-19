@@ -16,7 +16,7 @@ import codecs
 from bs4 import BeautifulSoup as bs
 import lxml.html
 import re
-from core.models import Legislator, Session, Bill, BillSummaries
+from core.models import Legislator, Session, Bill, BillSummaries,Action
 import time 
 from io import StringIO
 from tqdm import tqdm
@@ -147,7 +147,8 @@ def update_bills(session:str)->dict:
                     bill_number=bill['Bill_id'],
                     d_introduced = d_introduced
                 )
-                matching_bill.sessions.add(sesh)
+                if not matching_bill.sessions.filter(pk = sesh.pk).exists():
+                    matching_bill.sessions.add(sesh)
             except Bill.MultipleObjectsReturned:
                 print(f"""Multiple bills match these parameters:
                 -Bill: {bill['Bill_id']}
@@ -200,7 +201,6 @@ def update_bills(session:str)->dict:
                     introduced_by = patron,
                 )
                 record.save()
-                record.patrons.add(patron)
                 record.sessions.add(sesh)
                 new_bills += 1
             except:
@@ -254,11 +254,12 @@ def update_summaries(session:str)->dict:
         pbar = tqdm(total = len(csv_summaries))
         pbar.set_description("Importing summaries...")
         sesh = Session.objects.filter(lis_id = session)
+        session_bills = Bill.objects.filter(sessions__in=sesh)
         db_summaries = BillSummaries.objects.filter(bill__sessions__in=sesh)
         for row in csv_summaries:
             if not db_summaries.filter(doc_id = row['doc_id']).exists():
                 try:
-                    bill = Bill.objects.get(bill_number = row['bill_number'])
+                    bill = session_bills.get(bill_number = row['bill_number'])
                 except Bill.DoesNotExist:
                     print(f"Cannot find bill {row['bill_number']}")
                 else:
@@ -275,4 +276,43 @@ def update_summaries(session:str)->dict:
         return {
             'count':new_summaries
         }
-    
+def update_actions(session:str)->dict:
+    """
+    Collects list actions found in the 'history.csv' file on LIS
+    """
+    csv_actions = get_csv_dicts(session,'History')
+    pbar = tqdm(total = len(csv_actions))
+    pbar.set_description("Importing actions...")
+    sesh = Session.objects.filter(lis_id = session)
+    session_bills = Bill.objects.filter(sessions__in=sesh)
+    new_actions = 0
+    for row in csv_actions:
+        d_action = dt.datetime.strptime(row['History_date'],"%m/%d/%y")
+        description = row['History_description']
+        try:
+            bill = session_bills.get(bill_number=row['Bill_id'])
+        except Bill.DoesNotExist:
+            print(f"Cannot find bill {row['Bill_id']}")
+        except:
+            raise
+        
+        if not bill.actions.filter(
+            d_action = d_action,
+            description=description
+        ).exists():
+            new_action = Action(
+                d_action = d_action,
+                description = description,
+                bill = bill
+            )
+            if len(row['History_refid']) !=0:
+                new_action.refid = row['History_refid']
+            new_action.save()
+            new_actions += 1
+        pbar.update(1)
+    pbar.close()
+    return {
+        'count':new_actions
+    }  
+
+

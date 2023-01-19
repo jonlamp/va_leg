@@ -38,13 +38,36 @@
         {% endfor %} 
     </div>
     {% endif %} 
-    <div id="patrons" class="collapsable">
+    <div id="patrons">
         <h2>Patrons</h2>
+        <div class="collapse-head" data-target="patron-items">
+            {% for patron in bill.patrons.all %} 
+                <div class="row" id="pat{{ patron.pk }}">
+                    <div class="col">{{ patron.patron_type }}</div>
+                    <div class="col">
+                        {{ patron.legislator.name }} 
+                        (<span class="party-{{ patron.legislator.party|lower }}">{{ patron.legislator }}</span>)
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
     <div id="committees" class="collapsable">
         <h2>Committees</h2>
     </div>
-    <div id="updates" class="collapsable">
-        <h2>Updates</h2>
+    <div id="actions">
+        <h2 class="collapse-head" data-target="action-items">Actions</h2>
+        <div class="collapse-content" id="action-items">
+            {% for action in actions %} 
+            <div class="row" id="act{{ action.pk }}">
+                <div class="col">
+                    {{ action.d_action|date:'m/d/Y' }}
+                </div>
+                <div class="col">
+                    {{ action.description }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}
