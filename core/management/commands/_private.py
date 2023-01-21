@@ -392,7 +392,7 @@ def update_patrons(session:str)->dict:
                 print(f"\nCould not add {row['member_id']} as a patron of {row['bill_id']}")
             else:
                 patron_type = row['patron_type']
-                if not Patron.objects.filter(bill=bill,legislator=legislator,patron_type=patron_type).exists():
+                if not Patron.objects.filter(bill=bill,legislator=legislator).exists():
                     new_patron = Patron(
                         patron_type = patron_type,
                         bill=bill,
