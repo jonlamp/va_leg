@@ -5,8 +5,8 @@ class Legislator(models.Model):
     name = models.CharField(max_length=100)
     # place will come later 
     place = models.CharField(max_length=30, null=True)
-    party = models.CharField(max_length=1)
-    district = models.IntegerField()
+    party = models.CharField(max_length=1, null=True)
+    district = models.IntegerField(null=True)
     lis_id = models.CharField(max_length=5, verbose_name="LIS Member ID")
     lis_no = models.CharField(max_length=5, verbose_name="LIS Member Number")
     d_added = models.DateTimeField(auto_now_add=True)
@@ -78,6 +78,7 @@ class Action(models.Model):
 
 class Patron(models.Model):
     patron_type = models.CharField(max_length=40)
+    d_added = models.DateTimeField(auto_now_add=True)
     bill = models.ForeignKey(
         Bill,
         on_delete=models.CASCADE,

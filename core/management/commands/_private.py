@@ -16,11 +16,12 @@ import codecs
 from bs4 import BeautifulSoup as bs
 import lxml.html
 import re
-from core.models import Legislator, Session, Bill, BillSummaries,Action
+from core.models import Legislator, Session, Bill, BillSummaries,Action,Patron
 import time 
 from io import StringIO
 from tqdm import tqdm
 import datetime as dt
+import pandas as pd
 #after this session, I'll need a better way to get the current session
 CONFIG = {
     'session':'231'
@@ -43,25 +44,32 @@ def get_csv_dicts(session:str,filename:str)->list:
     except requests.exceptions.HTTPError as err:
         raise SystemExit(err)
     else:
-        #apparently uses iso encoding
-        if filename == "Summaries":
-            #normally, one would use request.iter_lines here
-            #however, request.iter_lines drops newline characters without replacing
-            #meaningyougetsomewordslookinglikethis
+        try:
             file = StringIO(response.content.decode('utf-8'))
             reader = csv.DictReader(file)
             l_reader = list(reader)
             file.close()
-        else:
-            decoded_response = codecs.iterdecode(response.iter_lines(),'iso-8859-1')
-            reader = csv.DictReader(decoded_response)
-            l_reader = list(reader)
+        except UnicodeDecodeError: #only go to iterdecode if there's an error reading the file
+            try:
+                #apparently uses iso encoding
+                decoded_response = codecs.iterdecode(response.iter_lines(),'iso-8859-1')
+                reader = csv.DictReader(decoded_response)
+                l_reader = list(reader)
+            except:
+                raise
 
         for row in l_reader:
             for k,v in row.items():
                 #each field sometimes has trailing spaces
                 row[k] = v.strip()
         return l_reader
+
+def bill_number_to_id(bill_number:str)->str:
+    """
+    Translates "XB0000" bill number format to "XB0" format
+    """
+    return bill_number[:2] + str(int(bill_number[2:]))
+
 
 def scrape_lis_legislator(session:str,lis_id:str)->dict:
         """
@@ -89,7 +97,47 @@ def scrape_lis_legislator(session:str,lis_id:str)->dict:
                     'district':re.findall("\d+", font)[0]
                 }
 
+def find_individual_legislator(session:str,lis_id:str,leg_name:str,lookback=5)->Legislator:
+    """
+    Finds legislator by lis_id in previous sessions. Default number of years to look 
+    back through is 5.
+    """
+    for i in range[1:lookback+1]:
+        print(
+            f"""
+            Cannot find legislator {lis_id}, {leg_name}
+            """
+        )
+        session_base = int(session[:2])
+        searching = str(session_base - (i))+"1"
+        print(f"\nSearching session {searching}")
+        try:
+            lis_output = scrape_lis_legislator(
+                session=searching,
+                lis_id = lis_id
+            )
+            new_rep = Legislator(
+                name = leg_name,
+                party = lis_output['session'],
+                district = lis_output['district'],
+                lis_id = lis_id,
+                lis_no = lis_id[:1] + str(int(lis_id[1:])).zfill(4)
+            )
+            new_rep.save()
+            patron = new_rep
+            return patron
+        except SystemExit:
+            if i >= 5:
+                print("Could not find legislator in previous 5 sessions.")
+                raise
+            else:
+                time.sleep(1)
+                pass
 #legislators should be updated first, as many other records are related
+#plus, legislators are not bound by time and session in quite the same way
+#that other fields are.
+
+#ahh, to not be bound by time... or session?
 def update_legislators(session:str)->dict:
     """
     Checks db for legislator, adds if not found. Returns dict with:
@@ -160,38 +208,20 @@ def update_bills(session:str)->dict:
                 #previous session(s) if so. #check a maximum of 5 sessions
                 if not Legislator.objects.filter(lis_id=bill['Patron_id']).exists():
                     patron_id = bill['Patron_id']
-                    lis_no = patron_id[:1] + str(int(patron_id[2:])).zfill(4)
-                    print(
-                        f"""
-                        Cannot find legislator {patron_id}, {bill['Patron_name']}
-                        """
+                    #add default information for now
+                    patron = Legislator(
+                        name=bill['Patron_name'],
+                        lis_id = patron_id,
+                        lis_no = str(patron_id[0]) + str(int(patron_id[1:])).zfill(4)
                     )
-                    for i in range(1,6):
-                        session_base = int(session[:2])
-                        searching = str(session_base - (i))+"1"
-                        print(f"Searching session {searching}")
-                        try:
-                            lis_output = scrape_lis_legislator(
-                                session=searching,
-                                lis_id = patron_id
-                            )
-                            new_rep = Legislator(
-                                name = bill['Patron_name'],
-                                party = lis_output['session'],
-                                district = lis_output['district'],
-                                lis_id = patron_id,
-                                lis_no = lis_no
-                            )
-                            new_rep.save()
-                            patron = new_rep
-                            break
-                        except:
-                            if i >= 5:
-                                print("Could not find legislator in previous 5 sessions.")
-                                raise
-                            else:
-                                pass
-                patron = Legislator.objects.get(lis_id=bill['Patron_id'])
+                    patron.save()
+                    #patron = find_individual_legislator(
+                    #    session=session,
+                    #    lis_id = patron_id,
+                    #    leg_name = bill['Patron_name']
+                    #)
+                else:
+                    patron = Legislator.objects.get(lis_id=bill['Patron_id'])
                 record = Bill(
                     bill_number = bill['Bill_id'],
                     title = bill['Bill_description'],
@@ -224,10 +254,9 @@ def update_summaries(session:str)->dict:
         -category
         -content
         """
-        #lis stores the bill number for summaries as HB0000, as opposed
-        #to HB0 where it is everywhere else
+
         bill = summary['SUM_BILNO'].strip()
-        bill = bill[:2] + str(int(bill[2:]))
+        bill = bill_number_to_id(bill) #csv uses bill ID
         doc_id = summary['SUMMARY_DOCID'].strip()
         category = summary['SUMMARY_TYPE'].strip()
         content_dirty = summary['SUMMARY_TEXT'].strip()
@@ -315,4 +344,64 @@ def update_actions(session:str)->dict:
         'count':new_actions
     }  
 
+def update_patrons(session:str)->dict:
+    """
+    Collects patrons found in 'sponsors.csv'
+    """
+    #we need to manually handle the csv reader here, as there are unlabeled columns.
+    #everything after the "-" in the csv should be joined by a space (cell 6 and after)
+    url = f'https://lis.virginia.gov/SiteInformation/csv/{session}/sponsors.csv'
+    response = requests.get(url)
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except:
+        raise 
+    else:
+        file = StringIO(response.content.decode('utf-8'))
+        reader = csv.reader(file)
+        l_reader = list(reader)
+        file.close()
 
+    csv_info = []
+    for row in l_reader[1:]: #exclude header row
+        row[3] = row[3][6:]
+        
+        results = {
+            'member_name':row[0].strip(),
+            'member_id':row[1].strip(),
+            'bill_id':row[2].strip(),
+            'patron_type': row[3].strip()
+        }
+        csv_info.append(results)
+
+    pbar = tqdm(total = len(csv_info))
+    pbar.set_description("Importing patrons...")
+    sesh = Session.objects.filter(lis_id = session)
+    session_bills = Bill.objects.filter(sessions__in=sesh)
+    new_patrons = 0
+    for row in csv_info:
+        try:
+            bill = session_bills.get(bill_number=bill_number_to_id(row['bill_id']))
+        except Bill.DoesNotExist:
+            print(f"Bill {row['bill_id']} cannot be found.")
+        else:
+            try:
+                legislator = Legislator.objects.get(lis_no = row['member_id'])
+            except Legislator.DoesNotExist:
+                print(f"\nCould not add {row['member_id']} as a patron of {row['bill_id']}")
+            else:
+                patron_type = row['patron_type']
+                if not Patron.objects.filter(bill=bill,legislator=legislator,patron_type=patron_type).exists():
+                    new_patron = Patron(
+                        patron_type = patron_type,
+                        bill=bill,
+                        legislator = legislator
+                    )
+                    new_patron.save()
+                    new_patrons += 1
+        pbar.update(1)
+    pbar.close()
+    return {
+        'count':new_patrons
+    }

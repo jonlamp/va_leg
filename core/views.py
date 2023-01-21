@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from core.models import Bill, BillSummaries
+from core.models import Bill, BillSummaries, Patron
 from django import forms
 from django.db.models import Q, IntegerField,Min
 from django.db.models.functions import Cast,Substr
@@ -23,12 +23,14 @@ def bill_view(request,bill_id):
     search_form.fields['query'].widget.attrs['placeholder'] = 'Search'
     summaries = BillSummaries.objects.filter(bill=bill)
     actions = bill.actions.all()
+    patrons = Patron.objects.filter(bill=bill)
     context = {
         'search_form':search_form,
         'title':bill.bill_number,
         'bill':bill,
         'summaries':summaries,
         'actions':actions,
+        'patrons':patrons
     }
     return render(request,'core/bill.html',context)
 

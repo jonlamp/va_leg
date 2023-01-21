@@ -2,6 +2,40 @@
 
 {% block local_style %}
 <style>
+    #summaries, #summary {
+        line-height: 1.5;
+    }
+    #summaries .collapsable {
+        border: 1px solid #333533;
+    }
+    #summaries .collapse-head {
+        font-size: 18pt;
+        background-color: #E8EDDF;
+        padding: 10px 20px;
+    }
+    #summaries .collapse-content {
+        background-color: #FDFCFA;
+        padding: 10px 20px;
+        display:none;
+    }
+    #action-items .row, #patrons .row {
+        display:flex;
+        padding: 5px;
+    }
+    #action-items .row .col {
+        flex: 0 3 auto;
+    }
+    #action-items .row .col:first-child {
+        flex: 0 0 100px;
+    }
+    .party-r {
+        color:#b22222;
+        font-weight: bold;
+    }
+    .party-d{
+        color:#00a8e8;
+        font-weight: bold;
+    }
 </style>
 {% endblock %}
 
@@ -39,15 +73,12 @@
     </div>
     {% endif %} 
     <div id="patrons">
-        <h2>Patrons</h2>
-        <div class="collapse-head" data-target="patron-items">
-            {% for patron in bill.patrons.all %} 
+        <h2 class="collapse-head" data-target="patron-items">Patrons</h2>
+        <div class="collapse-content" id="patron-items">
+            {% for patron in patrons %} 
                 <div class="row" id="pat{{ patron.pk }}">
-                    <div class="col">{{ patron.patron_type }}</div>
-                    <div class="col">
-                        {{ patron.legislator.name }} 
-                        (<span class="party-{{ patron.legislator.party|lower }}">{{ patron.legislator }}</span>)
-                    </div>
+                    {{ patron.patron_type }} {{ patron.legislator.name }} 
+                    (<span class="party-{{ patron.legislator.party|lower }}">{{ patron.legislator.party }}</span>)
                 </div>
             {% endfor %}
         </div>

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from core.models import Legislator, Session
-from core.management.commands._private import update_legislators, update_bills,update_summaries, update_actions
+from core.management.commands._private import update_legislators, update_bills,update_summaries, update_actions, update_patrons
 
 class Command(BaseCommand):
     help = 'Collects the data needed for website'
@@ -12,7 +12,7 @@ class Command(BaseCommand):
             default='all',
             const='all',
             nargs='?',
-            choices=['bills','legislators','all', 'summaries','actions']
+            choices=['bills','legislators','all']
         )
     def handle(self,*args,**options):
         if 'legislators' in options['only'] or 'all' in options['only']:
@@ -21,9 +21,9 @@ class Command(BaseCommand):
         if 'bills' in options['only'] or 'all' in options['only']:
             new_bills = update_bills(options['session'])
             self.stdout.write(self.style.SUCCESS(f'Added {new_bills["count"]} new bills!'))
-        if 'summaries' in options['only'] or 'all' in options['only']:
             new_summaries = update_summaries(options['session'])
             self.stdout.write(self.style.SUCCESS(f'Added {new_summaries["count"]} new summaries!'))
-        if 'actions' in options['only'] or 'all' in options['only']:
             new_actions = update_actions(options['session'])
             self.stdout.write(self.style.SUCCESS(f'Added {new_actions["count"]} new actions!'))
+            new_patrons = update_patrons(options['session'])
+            self.stdout.write(self.style.SUCCESS(f'Added {new_patrons["count"]} new patrons!'))

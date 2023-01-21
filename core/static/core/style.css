@@ -82,7 +82,7 @@ main {
     display: flex;
     flex-direction: column;
     flex:2 1 auto;
-    padding: 10px 50px;
+    padding: 10px 50px 50px 50px;
     max-width: 900px;
 }
 #subtitle {
