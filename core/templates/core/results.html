@@ -11,21 +11,51 @@
     tr:nth-child(even){
         background-color:#E8EDDF;
     }
+    #label, input[type='text'],input[type='number'] {
+        font-size: 14pt;
+        padding: 3px 15px;
+    }
+    #advanced-search {
+        padding-bottom: 20px;
+    }
+    #advanced-search label, input[type='submit']{
+        margin-top: 10px;
+        display: block;
+    }
+    #advanced-search input[type="text"], #advanced-search input[type='number'] {
+        border-radius: 10px;
+        border: 1px grey solid;
+    }
+    #advanced-search input[type="text"]{
+        width: 60%;
+    }
+    @media screen and (max-width:900px) {
+        #content {
+            padding:10px 5px;
+        }
+        #advanced-search input[type='text']{
+            width: 90%;
+        }
+}
+
 </style>
 {% endblock %}
 
 {% block left_nav %}
-<form id="search-form" action="search">
-    {{ search_form }}
-</form>
-<br/>
-<a href="">Advanced Search</a>
-<hr>
 {% endblock %}
 {% block content %} 
-    <h1>Results</h1>
+    <h1>Search</h1>
+    <form id='advanced-search' method="POST">
+        {% csrf_token %} 
+        {{ advanced_search_form }}
+        <input type="submit" value="Search">
+    </form>
     <div id="search-string">
+        {% if results|length == 0 %}
+        No results found
+        {% else %}
         Returning results for: {{ query_string }}
+        {% endif %}
     </div>
     <div id="search-results">
         <table>
@@ -46,5 +76,8 @@
                 {% endfor %} 
             </tbody>
         </table>
+        {% if results|length > 99 %} 
+        <div>Showing the first 100 results. Please try changing your query for different results.</div>
+        {% endif %}
     </div>
 {% endblock %}

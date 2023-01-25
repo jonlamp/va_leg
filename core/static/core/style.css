@@ -99,32 +99,7 @@ main {
     font-size:18pt;
     margin-bottom:10px;
 }
-#summaries, #summary {
-    line-height: 1.5;
-}
-#summaries .collapsable {
-    border: 1px solid #333533;
-}
-#summaries .collapse-head {
-    font-size: 18pt;
-    background-color: #E8EDDF;
-    padding: 10px 20px;
-}
-#summaries .collapse-content {
-    background-color: #FDFCFA;
-    padding: 10px 20px;
-    display:none;
-}
-#action-items .row {
-    display:flex;
-    padding: 5px;
-}
-#action-items .row .col {
-    flex: 0 3 auto;
-}
-#action-items .row .col:first-child {
-    flex: 0 0 100px;
-}
+
 
 footer {
     background-color: #333533;
