@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+
+{% block local_style %}
+
+{% endblock %}
+
+{% block left_nav %}
+<form id="search-form" action="{% url 'search' %}">
+    {{ search_form }}
+</form>
+<br/>
+<a href="{% url 'search' %}">Advanced Search</a>
+<hr>
+{% endblock %}
+
+{% block content %} 
+<h1>Browse by latest actions</h1>
+{% for day in days %} 
+    <h2>
+        {{ day.d_action|date:"D d M Y" }}
+    </h2>
+    <div>
+        <table>
+            <thead>
+                <th>Bill</th>
+                <th>Title</th>
+            </thead>
+            <tbody>
+                {% for bill in day.bills %}
+                <tr>
+                    <td>
+                        <a href="{% url 'bill_view' bill.id %}">
+                            {{ bill.bill_number }}
+                        </a>
+                    </td>
+                    <td> {{ bill.title }} </td>
+                </tr> 
+                {% endfor %} 
+            </tbody>
+        </table>
+    </div>
+{% endfor %}
+
+{% endblock %}

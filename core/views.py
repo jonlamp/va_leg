@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from core.models import Bill, BillSummaries, Patron, Session
+from core.models import Bill, BillSummaries, Patron, Session, Action
 from django import forms
 from django.db.models import Q, IntegerField,Min, Max
 from django.db.models.functions import Cast,Substr
@@ -116,3 +116,20 @@ def search(request):
             'advanced_search_form':AdvancedSearch()
         }
     return render(request,'core/results.html',context)
+
+def browse(request):
+    search_form = BasicSearch()
+    search_form.fields['query'].widget.attrs['placeholder'] = 'Search'
+    days = list(Action.objects.values('d_action').order_by('-d_action').distinct()[:5])
+    bill_list = Bill.objects.all().annotate(
+        latest_action = Max('actions__d_action')
+    )
+    for day in days:
+        day['bills'] = list(bill_list.filter(latest_action=day['d_action']).order_by('bill_number').values())
+    context = {
+        'title':'VAL - Browse',
+        'search_form':search_form,
+        'days':days
+    }
+    return render(request,'core/browse.html',context)
+
