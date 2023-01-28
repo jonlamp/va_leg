@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %} 
+
+{% block local_style %}
+<style>
+    p {
+        line-height:1.5;
+        font-size: 14pt;
+    }
+</style>
+{% endblock %}
+
+{% block left_nav %}
+<form id="search-form" action="{% url 'search' %}">
+    {{ search_form }}
+</form>
+<br/>
+<a href="{% url 'search' %}">Advanced Search</a>
+<hr>
+{% endblock %}
+
+{% block content %} 
+<h1>About VAL</h1>
+<p>
+    Virginia Legislation (VAL) is a website dedicated to tracking and displaying information about the bills being discussed in Virginia's Legislature. This site maintains separate copies of the bills hosted by the <a href="https://lis.virginia.gov">Legislative Information System</a> (LIS), and allows users to search for bills through a variety of ways. VAL is a new website, so new features are constantly being added! Currently in the works are user accounts that will allow you to follow bills that you care about, make notes about them, and share your notes with others. Be sure to check back for updates!
+</p>
+<p>
+    This website would not be possible without the dedication of the Division of Legislative Automated Systems, who maintains LIS and provides easily accessible copies of bill and legislator information through helpful CSV files. These files are accessed once each night, so information on VAL is only ever as up to date as the records available from the previous night. To find out more information about these files, or how VAL collects and parses these files, check out the source code for this project on <a href="https://github.com/jonlamp/va_leg">GitHub</a>. 
+</p>
+{% endblock %}

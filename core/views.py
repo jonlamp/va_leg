@@ -133,3 +133,11 @@ def browse(request):
     }
     return render(request,'core/browse.html',context)
 
+def about(request):
+    search_form = BasicSearch()
+    search_form.fields['query'].widget.attrs['placeholder'] = 'Search'
+    context = {
+        'title':'About VAL',
+        'search_form':search_form
+    }
+    return render(request,'core/about.html',context)
