@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-from secret_config import SECRET, STATIC_RT, LOCAL_DEBUG
+from secret_config import SECRET, STATIC_RT, LOCAL_DEBUG,SMTP_LOGIN,SMTP_SECRET
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,6 +27,7 @@ DEBUG = LOCAL_DEBUG
 
 ALLOWED_HOSTS = [
     "jonlamp.pythonanywhere.com",
+    "valegislation.com",
     "127.0.0.1"
 ]
 
@@ -103,6 +104,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+#Redirect to home after login
+LOGIN_REDIRECT_URL = "/"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
@@ -127,3 +130,11 @@ if STATIC_RT is not None:
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+#email smtp information
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = SMTP_LOGIN
+EMAIL_HOST_PASSWORD = SMTP_SECRET
