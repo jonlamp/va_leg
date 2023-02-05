@@ -55,8 +55,8 @@
                 <a href="{% url 'logout' %}">Logout</a>
                 <a href="#">Hi, {{ user.first_name }}</a>
             {% else %}
-                <a href="">Sign In</a>
-                <a href="">Register</a>
+                <a href="{% url 'login' %}">Sign In</a>
+                <a href="{% url 'register' %}">Register</a>
             {% endif %}
         </div>
         <div id="content">

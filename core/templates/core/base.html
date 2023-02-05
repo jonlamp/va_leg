@@ -23,10 +23,10 @@
                 <a href="{% url 'about' %}">About</a>
             {% if user.is_authenticated %}
                 <a href="{% url 'logout' %}">Logout</a>
-                <a href="#">Hi, {{ user.first_name }}</a>
+                <a href="#">Hi, {{ user.get_short_name }}</a>
             {% else %}
-                <a href="">Sign In</a>
-                <a href="">Register</a>
+                <a href="{% url 'login' %}">Sign In</a>
+                <a href="{% url 'register' %}">Register</a>
             {% endif %}
             </div>
         </div>

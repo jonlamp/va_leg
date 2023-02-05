@@ -27,7 +27,7 @@ DEBUG = LOCAL_DEBUG
 
 ALLOWED_HOSTS = [
     "jonlamp.pythonanywhere.com",
-    "valegislation.com",
+    "www.valegislation.com",
     "127.0.0.1"
 ]
 
@@ -35,13 +35,13 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "core",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "core"
 ]
 
 MIDDLEWARE = [
@@ -106,6 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 #Redirect to home after login
 LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/

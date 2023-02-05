@@ -1,10 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from core.models import Bill, BillSummaries, Patron, Session, Action
+from core.forms import NewUserForm
 from django import forms
 from django.db.models import Q, IntegerField,Min, Max
 from django.db.models.functions import Cast,Substr
 from django.forms import ModelChoiceField
+from django.contrib.auth import login
+from django.contrib import messages
 
 class CustomModelChoice(ModelChoiceField):
     def label_from_instance(self, obj):
@@ -141,3 +144,21 @@ def about(request):
         'search_form':search_form
     }
     return render(request,'core/about.html',context)
+
+def register(request):
+    if request.method == 'POST':
+        form = NewUserForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request,user)
+            messages.success(request,'Registration successful.')
+            return redirect('index')
+        else:
+            messages.error(request,'Could not register new user. Please try again.')
+    else:
+        form = NewUserForm()
+        context = {
+            'title':'VAL - New User',
+            'form': form
+        }
+        return render(request,'registration/register.html',context)
