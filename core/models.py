@@ -93,9 +93,11 @@ class TrackedBills(models.Model):
     d_added = models.DateTimeField(auto_now_add=True)
     bill = models.ForeignKey(
         Bill,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='tracking_users'
     )
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='tracked_bills'
     )

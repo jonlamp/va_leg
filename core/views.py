@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from core.models import Bill, BillSummaries, Patron, Session, Action
+from core.models import Bill, BillSummaries, Patron, Session, Action, TrackedBills
 from core.forms import NewUserForm
 from django import forms
 from django.db.models import Q, IntegerField,Min, Max
@@ -8,6 +8,7 @@ from django.db.models.functions import Cast,Substr
 from django.forms import ModelChoiceField
 from django.contrib.auth import login
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 class CustomModelChoice(ModelChoiceField):
     def label_from_instance(self, obj):
@@ -51,13 +52,18 @@ def bill_view(request,bill_id):
     summaries = BillSummaries.objects.filter(bill=bill)
     actions = bill.actions.all()
     patrons = Patron.objects.filter(bill=bill)
+    if request.user.is_authenticated:
+        tracked = TrackedBills.objects.filter(bill__pk = bill.pk, user__pk = request.user.pk).exists()
+    else:
+        tracked=False
     context = {
         'search_form':search_form,
         'title':bill.bill_number,
         'bill':bill,
         'summaries':summaries,
         'actions':actions,
-        'patrons':patrons
+        'patrons':patrons,
+        'tracked':tracked
     }
     return render(request,'core/bill.html',context)
 
@@ -162,3 +168,12 @@ def register(request):
             'form': form
         }
         return render(request,'registration/register.html',context)
+
+@login_required
+def track(request):
+    if request.method == 'POST':
+        bill_pk = request.POST.get('bill_pk')
+        bill = Bill.objects.get(pk=bill_pk)
+        tb = TrackedBills(bill=bill,user=request.user)
+        tb.save()
+        return redirect(f'bill/{bill_pk}')

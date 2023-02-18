@@ -50,6 +50,17 @@
 {% block content %} 
     <h1 id="bill-number">{{ bill.bill_number }}</h1>
     <div id="subtitle">{{ bill.title }}</div>
+    {% if user.is_authenticated %} 
+        {% if tracked %}
+            <div id="tracked"><a href="#">You are tracking this bill</a></div>
+        {% else %} 
+            <form action="{% url 'track' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="bill_pk" value="{{ bill.pk }}">
+                <input type="submit" value="Track bill">
+            </form>
+        {% endif %} 
+    {% endif %}
     {% if summaries|length == 1 %}
     <div id="summary">
         <h2>Summary</h2>
