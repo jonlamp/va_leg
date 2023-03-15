@@ -1,37 +1,66 @@
 {% extends "core/base.html" %}
 
+{% block local_style %}
+  <style>
+    #content{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #login-form .row div{
+      padding: 10px 0px;
+      display:inline-block;
+    }
+    #login-form{
+      font-size: 18px;
+    }
+    #login-form input {
+      font-size:14px;
+      padding: 5px;
+    }
+    #errors{
+      flex:1 2 10vh;
+    }
+    #form-container{
+      flex: 2 1 40vh;
+    }
+  </style>
+
+{% endblock %}
+
 {% block content %}
-
-  {% if form.errors %}
-    <p>Your username and password didn't match. Please try again.</p>
-  {% endif %}
-
-  {% if next %}
-    {% if user.is_authenticated %}
-      <p>Your account doesn't have access to this page. To proceed,
-      please login with an account that has access.</p>
-    {% else %}
-      <p>Please login to see this page.</p>
+  <div id="errors">
+    {% if form.errors %}
+      <p>Your username and password didn't match. Please try again.</p>
     {% endif %}
-  {% endif %}
+  
+    {% if next %}
+      {% if user.is_authenticated %}
+        <p>Your account doesn't have access to this page. To proceed,
+        please login with an account that has access.</p>
+      {% else %}
+        <p>Please login to see this page.</p>
+      {% endif %}
+    {% endif %}
+  </div>
+  <div id="form-container">
+    <form id="login-form" method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <div class="row">
+        <div>{{ form.username.label_tag }}</div>
+        <div>{{ form.username }}</div>
+      </div>
+      <div class="row">
+        <div>{{ form.password.label_tag }}</div>
+        <div>{{ form.password }}</div>
+      </div>
+      <input type="submit" value="login">
+      <input type="hidden" name="next" value="{{ next }}">
+      {# Assumes you setup the password_reset view in your URLconf #}
+      <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+    </form>
+  </div>
 
-  <form method="post" action="{% url 'login' %}">
-    {% csrf_token %}
-    <table>
-      <tr>
-        <td>{{ form.username.label_tag }}</td>
-        <td>{{ form.username }}</td>
-      </tr>
-      <tr>
-        <td>{{ form.password.label_tag }}</td>
-        <td>{{ form.password }}</td>
-      </tr>
-    </table>
-    <input type="submit" value="login">
-    <input type="hidden" name="next" value="{{ next }}">
-  </form>
-
-  {# Assumes you setup the password_reset view in your URLconf #}
-  <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
 
 {% endblock %}

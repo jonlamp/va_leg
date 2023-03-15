@@ -36,6 +36,25 @@ class AdvancedSearch(forms.Form):
         required=False
     )
 
+def check_chamber_status(bill_pk,chamber:str)->str:
+    """
+    Returns the status of the bill in it's chamber of origin given its history
+    """
+    bill_history = Action.objects.filter(bill__pk=bill_pk)
+    cham_history = bill_history.filter(description__startswith=chamber)
+    if (not bill_history.exists()):
+        return "ERROR"
+    if cham_history.filter(
+        Q(description__contains="Left In") |
+        Q(description__contains="Passed by") |
+        Q(description__contains="Tabled")
+    ).exists():
+        return "Failed"
+    elif cham_history.filter(description__contains="Passed").exists():
+        return "Passed"
+    else:
+        return "--"
+
 # Create your views here.
 def index(request):
     search_form = BasicSearch()
@@ -161,6 +180,7 @@ def register(request):
             return redirect('index')
         else:
             messages.error(request,'Could not register new user. Please try again.')
+            return redirect('register')
     else:
         form = NewUserForm()
         context = {
@@ -177,3 +197,47 @@ def track(request):
         tb = TrackedBills(bill=bill,user=request.user)
         tb.save()
         return redirect(f'bill/{bill_pk}')
+
+@login_required
+def untrack(request):
+    if request.method == 'POST':
+        bill_pk = request.POST.get('bill_pk')
+        bill = Bill.objects.get(pk=bill_pk)
+        tb = TrackedBills.objects.get(bill=bill,user=request.user)
+        tb.delete()
+        return redirect(f'bill/{bill_pk}')
+
+@login_required
+def dashboard(request):
+    session_years = list(Session.objects.values_list('year',flat='true').distinct())
+    search_form = BasicSearch()
+    search_form.fields['query'].widget.attrs['placeholder'] = 'Search'
+    tbs = TrackedBills.objects.filter(user=request.user,bill__sessions__year=session_years[-1])
+    def objectify_bills(tb):
+        bill = tb.bill
+        #statements aren't really 'actions' necessarily
+        latest = Action.objects.filter(bill__pk=bill.pk).exclude(description__contains='Impact Statement').latest('d_action')
+        if bill.bill_number[0] == "H":
+            cham_one_status = check_chamber_status(bill.pk,"H")
+            cham_two_status = check_chamber_status(bill.pk,"S")
+        else:
+            cham_one_status = check_chamber_status(bill.pk,"S")
+            cham_two_status = check_chamber_status(bill.pk,"H")
+        
+        res = {
+            'number':bill.bill_number,
+            'title':bill.title,
+            'pk':bill.pk,
+            'latest_action':latest.description,
+            'chamber_one_status':cham_one_status,
+            'chamber_two_status':cham_two_status
+        }
+        return res
+    tracked_bills = [objectify_bills(tb) for tb in tbs]
+    context = {
+        'title':'Dashboard',
+        'session_years':session_years,
+        'search_form':search_form,
+        'tracked_bills':tracked_bills
+    }
+    return render(request,'core/dashboard.html',context)

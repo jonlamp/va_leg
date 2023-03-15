@@ -52,7 +52,13 @@
     <div id="subtitle">{{ bill.title }}</div>
     {% if user.is_authenticated %} 
         {% if tracked %}
-            <div id="tracked"><a href="#">You are tracking this bill</a></div>
+            <form action="{% url 'untrack' %}" method="POST">
+                {% csrf_token %}
+                <div id="tracked">
+                    <input type="hidden" name="bill_pk" value="{{ bill.pk }}">
+                    You are tracking this bill.
+                    <input type="submit" value="Untrack bill">
+            </form>
         {% else %} 
             <form action="{% url 'track' %}" method="POST">
                 {% csrf_token %}

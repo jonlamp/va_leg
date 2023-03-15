@@ -1,12 +1,109 @@
-{% exends 'core/base.html' %} 
+{% extends 'core/base.html' %} 
 
 {% block title %} 
 VAL - Your Dashboard
 {% endblock %}
-
-{% block content %} 
-<h1>
-    Legislation Dashboard
-</h1>
-
+{% block local_style %}
+<style>
+    #content {
+        display:flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    #content > div {
+        margin:10px 0px;
+    }
+    #status-selector{
+        background-color: #e0e0e04F;
+        box-shadow: inset 0px 1px 2px #616161;
+        display: flex;
+        justify-content: space-around;
+        max-width: 300px;
+        width: 30vw;
+        border-radius: 14px;
+        padding: 5px 5px;
+    }
+    .status-option {
+        padding: 1px 15px;
+        border-radius: 10px;
+    }
+    #status-selector .active {
+        background-color: white;
+        box-shadow: 0px 2px 3px #6161614F;
+    }
+    #bills {
+        margin-top: 20px;
+    }
+    select {
+        font-size: 24px;
+        font-weight: 700;
+        font-family: neue-haas-grotesk-text, sans-serif;
+        background: none;
+        border: 1px solid lightgray;
+        padding: 5px;
+        border-radius: 10px;
+    }
+    @media screen and (max-width:900px) {
+        #bills th {
+            font-size:0.85rem;
+        }
+        #bills td {
+            font-size: 0.75rem;
+        }
+        #bills {
+            max-width: 100%;
+            overflow-x: scroll;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div id="title">
+    <h1>
+        Dashboard
+    </h1>
+</div> 
+<div id="session-year-container">
+    <h2 style="display:inline">Session Year:</h2>
+    <select name="session-year" id="session-year">
+        {% for year in session_years %}
+        <option value="{{ year }}">{{ year }}</option>
+        {% endfor %}
+    </select>
+</div>
+<!--<div id="year-summary">
+    Replace <b> with dynamic content
+    Bills Tracked <b>00</b>
+</div>-->
+<div id="tb-container">
+    <h2>Tracked Bills</h2>
+    <!--<div id="status-selector">
+        <div class="status-option active">All</div>
+        <div class="status-option">Passed</div>
+        <div class="status-option">Pending</div>
+        <div class="status-option">Failed</div>
+    </div>-->
+    <div id="bills">
+        <table class="table">
+            <thead>
+                <th>Bill</th>
+                <th>Title</th>
+                <th>Latest Action</th>
+                <th>Chamber of Origin Status</th>
+                <th>Second Chamber Status</th>
+            </thead>
+            <tbody>
+                {% for bill in tracked_bills %}
+                <tr>
+                    <td><a href="{% url 'bill_view' bill.pk %}">{{ bill.number }}</a></td>
+                    <td>{{ bill.title }}</td>
+                    <td>{{ bill.latest_action }}</td>
+                    <td>{{ bill.chamber_one_status }}</td>
+                    <td>{{ bill.chamber_two_status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

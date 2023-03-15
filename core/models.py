@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import Q
 
 # Create your models here.
 class Legislator(models.Model):
@@ -48,7 +49,8 @@ class Bill(models.Model):
 
     def __str__(self)->str:
         return f"{self.bill_number} {self.title}"
-
+           
+            
 class BillSummaries(models.Model):
     doc_id = models.CharField(max_length=10)
     category = models.CharField(max_length=50)

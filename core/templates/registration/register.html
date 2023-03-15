@@ -2,6 +2,41 @@
 
 {% block title %}{{ title }}{% endblock %}
 
+{% block local_style %}
+<style>
+.table {
+    display: table;
+    border-collapse: collapse;
+}
+.tr {
+    display: table-row;
+    border-bottom: 1px solid grey;
+}
+.tr .td:first-child {
+    max-width: 10vw;
+}
+.help-text {
+    display:block;
+    font-size:12px;
+}
+.td {
+    display: table-cell;
+    padding: 10px 0px;
+}
+input[type="submit"] {
+    font-size: 14px;
+    margin-top: 5px;
+}
+@media screen and (max-width:900px) {
+    #content{
+        padding: 10px 20px;
+    }
+    .tr .td:first-child {
+        max-width: none;
+    }
+}
+</style>
+{% endblock %}
 {% block content %}  
 
 <h1>New User</h1>
@@ -10,9 +45,28 @@
     <p>Something went wrong. Please try again.</p>
 {% endif %}
 
-<form method="POST">
+<form method="POST" class="table">
     {% csrf_token %}
-    {{ form.as_p }} 
+    {% for field in form %}
+    <div class="tr">
+        <div class="td">
+            {{ field.label_tag }}
+        </div>
+        <div class="td">
+            {{ field }}
+            <span class="help-text">{{ field.help_text }}</span>
+            {% if field.errors %}
+            <br>
+            <ul class="errorlist">
+                {% for error in field.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div> 
+
+    {% endfor %}
     <input type="submit" value="Register">
 </form>
 

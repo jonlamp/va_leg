@@ -34,6 +34,22 @@ label[for="id_query"] {
 .collapse-head:hover {
     cursor: pointer;
 }
+table {
+    width:100%;
+    border-collapse: collapse;
+}
+th {
+    text-align: left;
+}
+th,td {
+    padding: .5rem .5rem;
+}
+tr {
+   border:1px solid rgba(0,0,0,.25);
+}
+tr:nth-child(even){
+    background-color: #ececec;
+}
 #top-nav{
     background-color: #333533;
     display: flex;
@@ -115,5 +131,12 @@ footer, footer a{
     }
     #left-nav{
         flex:0 3;
+    }
+    #site-nav {
+       font-size: 0.75em;
+       padding:0px;
+    }
+    #content {
+        padding: 10px 10px;
     }
 }
