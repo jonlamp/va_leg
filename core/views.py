@@ -180,7 +180,11 @@ def register(request):
             return redirect('index')
         else:
             messages.error(request,'Could not register new user. Please try again.')
-            return redirect('register')
+            context = {
+                'title':'VAL - New User',
+                'form': form
+            }
+            return render(request,'registration/register.html',context)
     else:
         form = NewUserForm()
         context = {
